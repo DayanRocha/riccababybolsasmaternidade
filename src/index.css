@@ -1,0 +1,87 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+/* Design System - Ricca Baby */
+@layer base {
+  :root {
+    --background: 74 15% 95%;
+    --foreground: 74 35% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 74 35% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 74 35% 8%;
+
+    --primary: 74 20% 38%;
+    --primary-foreground: 74 15% 95%;
+
+    --secondary: 32 35% 68%;
+    --secondary-foreground: 32 55% 8%;
+
+    --muted: 74 15% 88%;
+    --muted-foreground: 74 25% 28%;
+
+    --accent: 32 35% 58%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 74 15% 88%;
+    --input: 74 15% 88%;
+    --ring: 32 35% 58%;
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-montserrat;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-montserrat;
+  }
+}
+
+@layer components {
+  .hero-gradient {
+    background: linear-gradient(135deg, hsl(74, 20%, 38%) 0%, hsl(74, 15%, 48%) 100%);
+  }
+
+  .rose-gold-gradient {
+    background: linear-gradient(135deg, hsl(32, 35%, 58%) 0%, hsl(32, 40%, 48%) 100%);
+  }
+
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: hsla(0, 0%, 100%, 0.1);
+    border: 1px solid hsla(0, 0%, 100%, 0.2);
+  }
+
+  .product-card {
+    @apply bg-card rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-border;
+  }
+
+  .whatsapp-button {
+    @apply rose-gold-gradient text-white px-6 py-3 rounded-full font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105;
+  }
+
+  .hero-text {
+    @apply text-4xl md:text-6xl font-bold text-primary-foreground leading-tight;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold text-primary mb-8 text-center;
+  }
+}
