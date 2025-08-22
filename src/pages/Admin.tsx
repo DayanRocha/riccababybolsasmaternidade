@@ -24,6 +24,7 @@ const Admin = () => {
   useEffect(() => {
     // Check if user is authenticated
     supabase.auth.getUser().then(({ data: { user } }) => {
+      console.log('Current user:', user);
       setUser(user);
       if (user) {
         checkAdminAccess(user);
@@ -35,6 +36,7 @@ const Admin = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user);
         setUser(session?.user ?? null);
         if (session?.user) {
           checkAdminAccess(session.user);
@@ -51,9 +53,12 @@ const Admin = () => {
 
   const checkAdminAccess = async (user: User) => {
     try {
+      console.log('Checking admin access for user:', user.email);
+      
       // First check if email is authorized
       const emailAuthorized = user.email === AUTHORIZED_ADMIN_EMAIL;
       setIsAuthorizedEmail(emailAuthorized);
+      console.log('Email authorized:', emailAuthorized);
 
       if (!emailAuthorized) {
         setIsAdmin(false);
@@ -67,11 +72,14 @@ const Admin = () => {
       }
 
       // If email is authorized, check admin role in database
-      const { data, error } = await supabase
+      console.log('Checking profile for user ID:', user.id);
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
         .maybeSingle();
+
+      console.log('Profile query result:', { profile, error });
 
       if (error) {
         console.error('Error checking admin role:', error);
@@ -81,24 +89,62 @@ const Admin = () => {
           description: "Erro ao verificar permissões de administrador.",
           variant: "destructive",
         });
-      } else if (!data) {
-        // Profile doesn't exist yet
-        console.log('Profile not found for user:', user.id);
-        setIsAdmin(false);
-        toast({
-          title: "Perfil não encontrado",
-          description: "Seu perfil ainda está sendo criado. Tente novamente em alguns instantes.",
-          variant: "destructive",
-        });
-      } else {
-        const userIsAdmin = data.role === 'admin';
-        setIsAdmin(userIsAdmin);
-        if (!userIsAdmin) {
+      } else if (!profile) {
+        // Profile doesn't exist yet, let's create it
+        console.log('Profile not found, creating admin profile for user:', user.id);
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email,
+            role: 'admin'
+          })
+          .select()
+          .single();
+
+        console.log('Profile creation result:', { newProfile, createError });
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          setIsAdmin(false);
           toast({
-            title: "Acesso negado",
-            description: "Você não tem permissão para acessar o painel administrativo.",
+            title: "Erro",
+            description: "Erro ao criar perfil de administrador.",
             variant: "destructive",
           });
+        } else {
+          setIsAdmin(true);
+          toast({
+            title: "Acesso liberado",
+            description: "Perfil de administrador criado com sucesso!",
+          });
+        }
+      } else {
+        const userIsAdmin = profile.role === 'admin';
+        console.log('User role:', profile.role, 'Is admin:', userIsAdmin);
+        setIsAdmin(userIsAdmin);
+        if (!userIsAdmin) {
+          // If user exists but is not admin, update to admin since email is authorized
+          console.log('Updating user role to admin');
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ role: 'admin' })
+            .eq('id', user.id);
+
+          if (updateError) {
+            console.error('Error updating role:', updateError);
+            toast({
+              title: "Erro",
+              description: "Erro ao atualizar permissões.",
+              variant: "destructive",
+            });
+          } else {
+            setIsAdmin(true);
+            toast({
+              title: "Acesso liberado",
+              description: "Permissões de administrador atualizadas!",
+            });
+          }
         }
       }
     } catch (error) {
