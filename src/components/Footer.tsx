@@ -14,7 +14,7 @@ const Footer = () => {
           
           <div className="flex justify-center space-x-6 mb-8">
             <a 
-              href="https://wa.me/SEUNUMERO" 
+              href="https://wa.me/5518996125628" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-primary-foreground hover:text-rose-gold-400 transition-colors duration-300"

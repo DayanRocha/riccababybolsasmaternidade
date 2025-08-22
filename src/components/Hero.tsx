@@ -24,7 +24,7 @@ const Hero = () => {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a 
-              href="https://wa.me/SEUNUMERO" 
+              href="https://wa.me/5518996125628" 
               target="_blank" 
               rel="noopener noreferrer"
               className="whatsapp-button inline-flex items-center justify-center"

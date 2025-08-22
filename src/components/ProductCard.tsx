@@ -6,7 +6,7 @@ interface ProductCardProps {
   whatsappLink?: string;
 }
 
-const ProductCard = ({ image, name, description, whatsappLink = "https://wa.me/SEUNUMERO" }: ProductCardProps) => {
+const ProductCard = ({ image, name, description, whatsappLink = "https://wa.me/5518996125628" }: ProductCardProps) => {
   return (
     <div className="product-card animate-scale-in">
       <div className="aspect-square overflow-hidden rounded-lg mb-4">
