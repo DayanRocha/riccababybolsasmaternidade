@@ -5,7 +5,8 @@ import { User } from '@supabase/supabase-js';
 import AuthForm from '@/components/admin/AuthForm';
 import AdminLayout from '@/components/admin/AdminLayout';
 import ProductsList from '@/components/admin/ProductsList';
-import ProductForm from '@/components/admin/ProductForm';
+import ProductFormWithDetection from '@/components/admin/ProductFormWithDetection';
+import SEO from '@/components/SEO';
 import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/types/product';
 
@@ -230,23 +231,30 @@ const Admin = () => {
   }
 
   return (
-    <AdminLayout userEmail={user.email}>
-      <div className="px-4 py-6">
-        {currentView === 'list' ? (
-          <ProductsList
-            onEdit={handleEditProduct}
-            onAdd={handleAddProduct}
-            refreshTrigger={refreshTrigger}
-          />
-        ) : (
-          <ProductForm
-            product={editingProduct}
-            onSave={handleSaveProduct}
-            onCancel={handleCancelEdit}
-          />
-        )}
-      </div>
-    </AdminLayout>
+    <>
+      <SEO 
+        title="Painel Administrativo - Ricca Baby"
+        description="Painel administrativo para gerenciar produtos da Ricca Baby"
+        url="https://riccababy.com/admin"
+      />
+      <AdminLayout userEmail={user.email}>
+        <div className="px-4 py-6">
+          {currentView === 'list' ? (
+            <ProductsList
+              onEdit={handleEditProduct}
+              onAdd={handleAddProduct}
+              refreshTrigger={refreshTrigger}
+            />
+          ) : (
+            <ProductFormWithDetection
+              product={editingProduct}
+              onSave={handleSaveProduct}
+              onCancel={handleCancelEdit}
+            />
+          )}
+        </div>
+      </AdminLayout>
+    </>
   );
 };
 

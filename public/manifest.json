@@ -1,0 +1,26 @@
+{
+  "name": "Ricca Baby - Bolsas Maternidade Premium",
+  "short_name": "Ricca Baby",
+  "description": "Bolsas maternidade elegantes e funcionais para mães modernas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F3F0",
+  "theme_color": "#8B7355",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["shopping", "lifestyle"],
+  "lang": "pt-BR"
+}

@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -18,9 +19,9 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex-shrink-0">
-            <img 
+            <OptimizedImage 
               src="/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png" 
-              alt="Ricca Baby" 
+              alt="Ricca Baby - Bolsas Maternidade Premium" 
               className="h-12 w-auto"
             />
           </div>

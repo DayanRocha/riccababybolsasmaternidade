@@ -1,4 +1,6 @@
 
+import OptimizedImage from '@/components/ui/OptimizedImage';
+
 const Hero = () => {
   return (
     <section id="inicio" className="min-h-screen hero-gradient flex items-center justify-center relative overflow-hidden">
@@ -6,9 +8,9 @@ const Hero = () => {
       
       <div className="container mx-auto px-4 text-center relative z-10">
         <div className="animate-fade-in">
-          <img 
+          <OptimizedImage 
             src="/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png" 
-            alt="Ricca Baby" 
+            alt="Ricca Baby - Bolsas Maternidade Premium" 
             className="h-32 md:h-48 w-auto mx-auto mb-8"
           />
           

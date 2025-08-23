@@ -7,8 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, Link, X } from 'lucide-react';
-import { Product } from '@/types/product';
+import { Product, ProductImage } from '@/types/product';
+import { productSchema } from '@/schemas/productSchema';
 
 interface Category {
   id: string;
@@ -33,15 +33,15 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     display_order: 0,
   });
   const [categories, setCategories] = useState<Category[]>([]);
+  const [productImages, setProductImages] = useState<ProductImage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadMethod, setUploadMethod] = useState<'url' | 'upload'>('url');
   const { toast } = useToast();
 
   useEffect(() => {
     loadCategories();
     if (product) {
       setFormData(product);
+      loadProductImages(product.id);
     }
   }, [product]);
 
@@ -62,44 +62,72 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
+  const loadProductImages = async (productId: string) => {
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = fileName;
+      // Verificar se a tabela product_images existe
+      const { data, error } = await supabase
+        .from('product_images')
+        .select('*')
+        .eq('product_id', productId)
+        .order('display_order')
+        .limit(1);
 
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file);
+      if (error && error.message.includes('product_images')) {
+        console.log('Tabela product_images ainda não existe, usando sistema legado');
+        return;
+      }
 
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
-
-      setFormData(prev => ({
-        ...prev,
-        image_url: data.publicUrl,
-        image_alt: formData.name || 'Produto Ricca Baby'
-      }));
-
-      toast({
-        title: "Sucesso",
-        description: "Imagem enviada com sucesso!",
-      });
+      if (error) throw error;
+      setProductImages(data || []);
     } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
+      console.error('Error loading product images:', error);
+      // Se a tabela não existe, não fazer nada (usar sistema legado)
+    }
+  };
+
+  const saveProductImages = async (productId: string) => {
+    try {
+      // Verificar se a tabela product_images existe tentando fazer uma consulta simples
+      const { error: checkError } = await supabase
+        .from('product_images')
+        .select('id')
+        .limit(1);
+
+      if (checkError && checkError.message.includes('product_images')) {
+        console.log('Tabela product_images ainda não existe, pulando salvamento de múltiplas imagens');
+        return;
+      }
+
+      // Primeiro, deletar imagens existentes se estamos editando
+      if (product?.id) {
+        await supabase
+          .from('product_images')
+          .delete()
+          .eq('product_id', productId);
+      }
+
+      // Inserir novas imagens
+      if (productImages.length > 0) {
+        const imagesToInsert = productImages.map((img, index) => ({
+          product_id: productId,
+          image_url: img.image_url,
+          image_alt: img.image_alt,
+          display_order: index,
+          is_primary: img.is_primary || index === 0
+        }));
+
+        const { error } = await supabase
+          .from('product_images')
+          .insert(imagesToInsert);
+
+        if (error) throw error;
+      }
+    } catch (error: any) {
+      console.error('Error saving product images:', error);
+      // Se a tabela não existe, não falhar o salvamento do produto
+      if (!error.message.includes('product_images')) {
+        throw error;
+      }
     }
   };
 
@@ -108,41 +136,82 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     setLoading(true);
 
     try {
+      // Validação básica manual
+      if (!formData.name.trim()) {
+        throw new Error("Nome do produto é obrigatório");
+      }
+      if (!formData.category_id) {
+        throw new Error("Categoria é obrigatória");
+      }
+
+      // Preparar dados para inserção/atualização
+      const productData = {
+        name: formData.name.trim(),
+        description: formData.description?.trim() || null,
+        image_url: formData.image_url || null,
+        image_alt: formData.image_alt || formData.name.trim(),
+        category_id: formData.category_id,
+        whatsapp_link: formData.whatsapp_link || 'https://wa.me/5518996125628',
+        is_active: formData.is_active,
+        display_order: formData.display_order || 0,
+      };
+
+      console.log('Saving product data:', productData);
+
+      let savedProductId: string;
+
       if (product?.id) {
         // Update existing product
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('products')
           .update({
-            ...formData,
+            ...productData,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', product.id);
+          .eq('id', product.id)
+          .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
         
-        toast({
-          title: "Sucesso",
-          description: "Produto atualizado com sucesso!",
-        });
+        savedProductId = product.id;
+        console.log('Product updated:', data);
       } else {
         // Create new product
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('products')
-          .insert([formData]);
+          .insert([productData])
+          .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
         
-        toast({
-          title: "Sucesso",
-          description: "Produto criado com sucesso!",
-        });
+        savedProductId = data[0].id;
+        console.log('Product created:', data);
       }
+
+      // Salvar imagens (se a tabela existir)
+      try {
+        await saveProductImages(savedProductId);
+      } catch (error: any) {
+        console.log('Múltiplas imagens não disponíveis ainda:', error.message);
+      }
+      
+      toast({
+        title: "Sucesso",
+        description: `Produto ${product ? 'atualizado' : 'criado'} com sucesso!`,
+      });
       
       onSave();
     } catch (error: any) {
+      console.error('Error saving product:', error);
       toast({
         title: "Erro",
-        description: error.message,
+        description: error.message || "Erro ao salvar produto",
         variant: "destructive",
       });
     } finally {
@@ -202,28 +271,19 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
 
           <div className="space-y-4">
             <Label>Imagem do Produto</Label>
-            <div className="flex gap-4 mb-4">
-              <Button
-                type="button"
-                variant={uploadMethod === 'url' ? 'default' : 'outline'}
-                onClick={() => setUploadMethod('url')}
-                size="sm"
-              >
-                <Link className="h-4 w-4 mr-2" />
-                URL da Imagem
-              </Button>
-              <Button
-                type="button"
-                variant={uploadMethod === 'upload' ? 'default' : 'outline'}
-                onClick={() => setUploadMethod('upload')}
-                size="sm"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Upload de Arquivo
-              </Button>
-            </div>
+            
+            {/* Sistema temporário de imagem única até a migração ser aplicada */}
+            <div className="space-y-4">
+              <div className="flex gap-4 mb-4">
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                >
+                  URL da Imagem
+                </Button>
+              </div>
 
-            {uploadMethod === 'url' ? (
               <div className="space-y-2">
                 <Input
                   placeholder="https://exemplo.com/imagem.jpg"
@@ -231,36 +291,30 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                   onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
                 />
               </div>
-            ) : (
-              <div className="space-y-2">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  disabled={uploading}
-                />
-                {uploading && <p className="text-sm text-gray-500">Enviando...</p>}
-              </div>
-            )}
 
-            {formData.image_url && (
-              <div className="relative">
-                <img
-                  src={formData.image_url}
-                  alt="Preview"
-                  className="w-32 h-32 object-cover rounded-lg border"
-                />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  className="absolute -top-2 -right-2"
-                  onClick={() => setFormData(prev => ({ ...prev, image_url: '', image_alt: '' }))}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
+              {formData.image_url && (
+                <div className="relative">
+                  <img
+                    src={formData.image_url}
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute -top-2 -right-2"
+                    onClick={() => setFormData(prev => ({ ...prev, image_url: '', image_alt: '' }))}
+                  >
+                    ×
+                  </Button>
+                </div>
+              )}
+              
+              <p className="text-sm text-gray-500">
+                Sistema de múltiplas imagens será ativado após aplicar a migração do banco de dados.
+              </p>
+            </div>
           </div>
 
           <div className="space-y-2">

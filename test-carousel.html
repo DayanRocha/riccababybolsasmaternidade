@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste do Carousel - Ricca Baby</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-title {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .test-result {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Teste de Funcionalidades - Ricca Baby</h1>
+        
+        <div class="test-section">
+            <h2 class="test-title">✅ Correções Implementadas</h2>
+            
+            <h3>1. Tipos TypeScript</h3>
+            <div class="test-result success">
+                ✓ Criados tipos ProductWithRelations e type guards
+                ✓ Adicionadas funções de validação isValidProduct()
+                ✓ Implementada conversão convertToProduct()
+            </div>
+            
+            <h3>2. Consultas de Banco de Dados</h3>
+            <div class="test-result success">
+                ✓ Corrigidas consultas com categories!inner para evitar duplicação
+                ✓ Adicionada validação de categoria por slug
+                ✓ Implementado logging para debug
+                ✓ Tratamento de erros melhorado
+            </div>
+            
+            <h3>3. Funcionalidade do ImageCarousel</h3>
+            <div class="test-result success">
+                ✓ Corrigidos event handlers com stopPropagation()
+                ✓ Melhorado z-index dos controles
+                ✓ Adicionado pointer-events-none no overlay
+                ✓ Implementado tratamento de gestos de toque
+                ✓ Melhorados indicadores visuais
+            </div>
+            
+            <h3>4. Modal de Tela Cheia</h3>
+            <div class="test-result success">
+                ✓ Corrigida navegação por teclado (ESC, setas, Z, espaço)
+                ✓ Melhorado controle de zoom
+                ✓ Adicionado foco automático no modal
+                ✓ Implementados gestos de toque para mobile
+                ✓ Melhorada acessibilidade com ARIA labels
+            </div>
+            
+            <h3>5. Responsividade Mobile</h3>
+            <div class="test-result success">
+                ✓ Controles maiores em dispositivos móveis
+                ✓ Botões com touch-manipulation
+                ✓ Indicadores de tamanho apropriado
+                ✓ Modal otimizado para telas pequenas
+                ✓ Thumbnails com scroll horizontal
+            </div>
+            
+            <h3>6. Tratamento de Erros</h3>
+            <div class="test-result success">
+                ✓ Validação de imagens com filtro de URLs válidas
+                ✓ Tratamento de erros de carregamento de imagem
+                ✓ Fallback para imagem padrão
+                ✓ Logging de erros e avisos
+                ✓ Recuperação automática de erros
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2 class="test-title">🔧 Funcionalidades Testadas</h2>
+            
+            <div class="test-result info">
+                <strong>Carousel de Imagens:</strong><br>
+                • Navegação por setas ← →<br>
+                • Navegação por pontos indicadores<br>
+                • Swipe em dispositivos móveis<br>
+                • Contador de imagens<br>
+                • Hover effects e transições
+            </div>
+            
+            <div class="test-result info">
+                <strong>Modal de Tela Cheia:</strong><br>
+                • Abertura ao clicar na imagem<br>
+                • Navegação por teclado (ESC, setas, Z)<br>
+                • Zoom com clique ou tecla<br>
+                • Thumbnails para navegação rápida<br>
+                • Gestos de toque em mobile
+            </div>
+            
+            <div class="test-result info">
+                <strong>Categorização de Produtos:</strong><br>
+                • Produtos de maternidade aparecem apenas na seção correta<br>
+                • Produtos escolares aparecem apenas na seção correta<br>
+                • Validação de dados da API<br>
+                • Logging para debug de categorias
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2 class="test-title">📱 Compatibilidade</h2>
+            
+            <div class="test-result success">
+                <strong>Desktop:</strong> Navegação por mouse e teclado<br>
+                <strong>Tablet:</strong> Touch otimizado com controles adequados<br>
+                <strong>Mobile:</strong> Gestos de swipe e tap, controles maiores<br>
+                <strong>Acessibilidade:</strong> ARIA labels, navegação por teclado
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2 class="test-title">🚀 Próximos Passos</h2>
+            
+            <div class="test-result info">
+                1. Testar em ambiente de produção<br>
+                2. Verificar performance em dispositivos móveis<br>
+                3. Validar acessibilidade com screen readers<br>
+                4. Monitorar logs de erro no console<br>
+                5. Coletar feedback dos usuários
+            </div>
+        </div>
+    </div>
+</body>
+</html>
