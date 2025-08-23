@@ -11,7 +11,7 @@ const Hero = () => {
           <OptimizedImage 
             src="/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png" 
             alt="Ricca Baby - Bolsas Maternidade Premium" 
-            className="h-32 md:h-48 w-auto mx-auto mb-8"
+            className="h-48 md:h-64 lg:h-80 w-auto mx-auto mb-8"
           />
           
           <h1 className="hero-text mb-6">
