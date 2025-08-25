@@ -1,0 +1,130 @@
+/* Melhorias de responsividade para o painel admin */
+
+/* Correções específicas para cards de produto mobile */
+@media (max-width: 640px) {
+  .product-card-mobile {
+    padding: 0.75rem;
+  }
+  
+  .product-actions {
+    margin-top: 0.75rem;
+  }
+  
+  .product-actions button {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.5rem;
+    min-height: 2rem;
+  }
+}
+
+/* Breakpoint extra small para telas muito pequenas */
+@media (max-width: 480px) {
+  /* Botões menores em telas muito pequenas */
+  .admin-mobile-btn {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  /* Cards com menos padding */
+  .admin-mobile-card {
+    padding: 0.75rem;
+  }
+  
+  /* Texto menor em badges */
+  .admin-mobile-badge {
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
+  }
+  
+  /* Inputs com altura menor */
+  .admin-mobile-input {
+    min-height: 2.25rem;
+  }
+  
+  /* Grid responsivo para botões */
+  .admin-mobile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  
+  /* Overflow horizontal para tabelas */
+  .admin-mobile-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Melhorias para telas pequenas (480px - 640px) */
+@media (min-width: 480px) and (max-width: 640px) {
+  .admin-tablet-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Utilitários para esconder/mostrar em diferentes tamanhos */
+.xs-hidden {
+  display: none;
+}
+
+.xs-only {
+  display: block;
+}
+
+@media (min-width: 480px) {
+  .xs-hidden {
+    display: block;
+  }
+  
+  .xs-only {
+    display: none;
+  }
+}
+
+/* Melhorias específicas para grid de botões */
+.product-grid-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.product-delete-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* Melhorias para formulários em mobile */
+@media (max-width: 640px) {
+  .form-mobile {
+    padding: 1rem;
+  }
+  
+  .form-mobile .space-y-6 > * + * {
+    margin-top: 1rem;
+  }
+  
+  .form-mobile .space-y-4 > * + * {
+    margin-top: 0.75rem;
+  }
+}
+
+/* Melhorias para modais em mobile */
+@media (max-width: 640px) {
+  .modal-mobile {
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+    overflow-y: auto;
+  }
+}
+
+/* Melhorias para navegação em mobile */
+@media (max-width: 640px) {
+  .nav-mobile {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .nav-mobile-item {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+}

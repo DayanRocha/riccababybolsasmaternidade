@@ -1,61 +1,183 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import OptimizedImage from "@/components/ui/OptimizedImage";
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  cover_image_url?: string;
+  cover_image_alt?: string;
+  is_active: boolean;
+  display_order: number;
+}
 
 const Collections = () => {
-  const categories = [
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fallback categories - sempre mostrar estes cards
+  const fallbackCategories = [
     {
+      id: "fallback-1",
       slug: "bolsas-maternidade",
-      title: "Bolsas Maternidade",
+      name: "Bolsas Maternidade",
       description: "Bolsas elegantes e funcionais para o dia a dia da maternidade",
-      image: "/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png"
+      cover_image_url: "",
+      is_active: true,
+      display_order: 1
     },
     {
+      id: "fallback-2",
       slug: "mochilas-maternidade", 
-      title: "Mochilas Maternidade",
+      name: "Mochilas Maternidade",
       description: "Mochilas práticas e elegantes para mães em movimento",
-      image: "/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png"
+      cover_image_url: "",
+      is_active: true,
+      display_order: 2
     },
     {
+      id: "fallback-3",
       slug: "bolsas-professoras",
-      title: "Bolsas Professoras", 
+      name: "Bolsas Professoras", 
       description: "Bolsas organizadas para profissionais da educação",
-      image: "/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png"
+      cover_image_url: "",
+      is_active: true,
+      display_order: 3
     },
     {
+      id: "fallback-4",
       slug: "bolsas-manicure",
-      title: "Bolsas para Manicure",
+      name: "Bolsas para Manicure",
       description: "Bolsas profissionais com compartimentos especializados",
-      image: "/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png"
+      cover_image_url: "",
+      is_active: true,
+      display_order: 4
     },
     {
+      id: "fallback-5",
       slug: "acessorios",
-      title: "Acessórios",
+      name: "Acessórios",
       description: "Acessórios complementares para sua rotina",
-      image: "/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png"
+      cover_image_url: "",
+      is_active: true,
+      display_order: 5
     },
     {
+      id: "fallback-6",
       slug: "necessaire",
-      title: "Necessaire",
+      name: "Necessaire",
       description: "Necessaires elegantes e funcionais",
-      image: "/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png"
+      cover_image_url: "",
+      is_active: true,
+      display_order: 6
     },
     {
+      id: "fallback-7",
       slug: "mala-de-mao",
-      title: "Mala de Mão",
+      name: "Mala de Mão",
       description: "Malas compactas para viagens e uso diário",
-      image: "/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png"
+      cover_image_url: "",
+      is_active: true,
+      display_order: 7
     },
     {
+      id: "fallback-8",
       slug: "mala-de-rodinhas",
-      title: "Mala de Rodinhas", 
+      name: "Mala de Rodinhas", 
       description: "Malas com rodinhas para viagens confortáveis",
-      image: "/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png"
+      cover_image_url: "",
+      is_active: true,
+      display_order: 8
     }
   ];
+
+  // Imagem padrão para categorias sem capa
+  const defaultImage = "/lovable-uploads/b6e94355-695d-454b-89b9-8c4d30200f7f.png";
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  // Debug: mostrar dados das categorias no console
+  useEffect(() => {
+    if (categories.length > 0) {
+      console.log('=== DEBUG CATEGORIAS ===');
+      categories.forEach(cat => {
+        console.log(`${cat.name} (${cat.slug}):`, {
+          id: cat.id,
+          cover_image_url: cat.cover_image_url,
+          cover_image_alt: cat.cover_image_alt
+        });
+      });
+    }
+  }, [categories]);
+
+  const loadCategories = async () => {
+    try {
+      setLoading(true);
+      
+      // Carregar categorias do banco (sem filtro is_active pois a coluna não existe)
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name, slug, cover_image_url, cover_image_alt')
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error('Erro ao carregar categorias:', error);
+        // Em caso de erro, usar categorias fallback
+        setCategories(fallbackCategories);
+        return;
+      }
+      
+      console.log('=== CATEGORIAS DO BANCO ===');
+      console.log('Total de categorias:', data?.length);
+      data?.forEach((cat: any, index: number) => {
+        console.log(`${index + 1}. ${cat.name} - slug: "${cat.slug}" - capa: ${cat.cover_image_url ? 'SIM' : 'NÃO'}`);
+      });
+      
+      // Se não há categorias no banco, usar fallback
+      if (!data || data.length === 0) {
+        console.log('Nenhuma categoria no banco, usando fallback');
+        setCategories(fallbackCategories);
+        return;
+      }
+
+      // Mesclar dados do banco com fallback
+      const mergedCategories = fallbackCategories.map(fallback => {
+        const dbCategory = data?.find((cat: any) => cat.slug === fallback.slug);
+        if (dbCategory) {
+          console.log(`✅ Categoria ${fallback.slug} encontrada no banco com capa:`, dbCategory.cover_image_url ? 'SIM' : 'NÃO');
+          return {
+            ...fallback,
+            id: dbCategory.id,
+            name: dbCategory.name,
+            cover_image_url: dbCategory.cover_image_url || '',
+            cover_image_alt: dbCategory.cover_image_alt || ''
+          };
+        }
+        console.log(`❌ Categoria ${fallback.slug} não encontrada no banco, usando fallback`);
+        return fallback;
+      });
+
+      console.log('🎯 Categorias finais:', mergedCategories);
+      setCategories(mergedCategories);
+      
+    } catch (error) {
+      console.error('Erro ao carregar categorias:', error);
+      // Em caso de erro, sempre mostrar categorias fallback
+      setCategories(fallbackCategories);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -82,36 +204,45 @@ const Collections = () => {
         {/* Categories Grid */}
         <section className="py-16 px-4">
           <div className="container mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {categories.map((category) => (
-                <Link
-                  key={category.slug}
-                  to={`/category/${category.slug}`}
-                  className="group"
-                >
-                  <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-                    <div className="aspect-square overflow-hidden">
-                      <img
-                        src={category.image}
-                        alt={category.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600 mx-auto mb-4"></div>
+                <p className="text-lg text-muted-foreground">Carregando categorias...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {categories.map((category) => (
+                  <Link
+                    key={category.id}
+                    to={`/category/${category.slug}`}
+                    className="group"
+                  >
+                    <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                      <div className="aspect-square overflow-hidden">
+                        <OptimizedImage
+                          src={category.cover_image_url || defaultImage}
+                          alt={category.cover_image_alt || category.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                      <div className="p-6">
+                        <h3 className="text-xl font-semibold mb-2 text-sage-800">
+                          {category.name}
+                        </h3>
+                        {category.description && (
+                          <p className="text-muted-foreground mb-4">
+                            {category.description}
+                          </p>
+                        )}
+                        <Button className="w-full bg-sage-600 hover:bg-sage-700">
+                          Ver Produtos
+                        </Button>
+                      </div>
                     </div>
-                    <div className="p-6">
-                      <h3 className="text-xl font-semibold mb-2 text-sage-800">
-                        {category.title}
-                      </h3>
-                      <p className="text-muted-foreground mb-4">
-                        {category.description}
-                      </p>
-                      <Button className="w-full bg-sage-600 hover:bg-sage-700">
-                        Ver Produtos
-                      </Button>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

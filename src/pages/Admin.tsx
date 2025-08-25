@@ -260,7 +260,7 @@ const Admin = () => {
         currentView={currentView}
         onViewChange={(view) => setCurrentView(view)}
       >
-        <div className="px-4 py-6">
+        <div className="px-2 sm:px-4 py-4 sm:py-6">
           {currentView === 'products' && (
             <ProductsList
               onEdit={handleEditProduct}

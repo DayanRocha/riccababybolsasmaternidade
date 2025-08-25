@@ -14,6 +14,7 @@ import { productSchema } from '@/schemas/productSchema';
 import MultipleImageUpload from './MultipleImageUpload';
 import { Image, AlertCircle, Upload, X } from 'lucide-react';
 import OptimizedImage from '@/components/ui/OptimizedImage';
+import DatabaseMigrationNotice from './DatabaseMigrationNotice';
 
 interface Category {
   id: string;
@@ -46,6 +47,7 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
   const [categoryImageFile, setCategoryImageFile] = useState<File | null>(null);
   const [categoryImagePreview, setCategoryImagePreview] = useState<string>('');
   const [showCategoryImageEdit, setShowCategoryImageEdit] = useState(false);
+  const [categoryCoverSupported, setCategoryCoverSupported] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -59,10 +61,24 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
   }, [product]);
 
   const loadCategories = async () => {
-    const { data, error } = await supabase
+    // Primeiro, tentar carregar com os campos de capa
+    let { data, error } = await supabase
       .from('categories')
       .select('id, name, cover_image_url, cover_image_alt')
       .order('name');
+    
+    // Se der erro (provavelmente porque as colunas não existem), tentar sem os campos de capa
+    if (error && error.message.includes('column')) {
+      console.log('Colunas de capa não existem ainda, carregando sem elas...');
+      setCategoryCoverSupported(false);
+      const fallbackQuery = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name');
+      
+      data = fallbackQuery.data;
+      error = fallbackQuery.error;
+    }
     
     if (error) {
       toast({
@@ -296,18 +312,20 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>
-          {product ? 'Editar Produto' : 'Novo Produto'}
-          {multipleImagesSupported && (
-            <span className="ml-2 text-sm text-green-600 font-normal">
-              ✓ Múltiplas imagens ativadas
-            </span>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="w-full max-w-4xl mx-auto px-2 sm:px-4">
+      <Card className="w-full">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg sm:text-xl">
+            {product ? 'Editar Produto' : 'Novo Produto'}
+            {multipleImagesSupported && (
+              <span className="block sm:inline sm:ml-2 text-sm text-green-600 font-normal mt-1 sm:mt-0">
+                ✓ Múltiplas imagens ativadas
+              </span>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-3 sm:px-6">
+        {!categoryCoverSupported && <DatabaseMigrationNotice />}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="name">Nome do Produto *</Label>
@@ -352,7 +370,7 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
           </div>
 
           {/* Category Cover Management */}
-          {formData.category_id && (
+          {formData.category_id && categoryCoverSupported && (
             <div className="border rounded-lg p-4 bg-gray-50">
               <div className="flex items-center justify-between mb-3">
                 <Label className="text-sm font-medium">Capa da Categoria</Label>
@@ -514,11 +532,11 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
             />
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-pink-600 hover:bg-pink-700"
+              className="flex-1 bg-pink-600 hover:bg-pink-700 order-1 sm:order-none"
             >
               {loading ? 'Salvando...' : 'Salvar Produto'}
             </Button>
@@ -526,14 +544,15 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
               type="button"
               variant="outline"
               onClick={onCancel}
-              className="flex-1"
+              className="flex-1 order-2 sm:order-none"
             >
               Cancelar
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

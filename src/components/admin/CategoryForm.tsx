@@ -166,19 +166,19 @@ const CategoryForm = ({ category, onSave, onCancel }: CategoryFormProps) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={onCancel}>
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+        <Button variant="outline" onClick={onCancel} className="w-full sm:w-auto">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
           {category ? 'Editar Categoria' : 'Nova Categoria'}
         </h2>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Basic Info */}
           <div className="space-y-4">
             <div>
@@ -298,11 +298,11 @@ const CategoryForm = ({ category, onSave, onCancel }: CategoryFormProps) => {
           </div>
         </div>
 
-        <div className="flex gap-4 pt-4 border-t">
-          <Button type="submit" disabled={loading} className="bg-pink-600 hover:bg-pink-700">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 border-t">
+          <Button type="submit" disabled={loading} className="bg-pink-600 hover:bg-pink-700 flex-1 order-1 sm:order-none">
             {loading ? 'Salvando...' : (category ? 'Atualizar' : 'Criar')} Categoria
           </Button>
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} className="flex-1 order-2 sm:order-none">
             Cancelar
           </Button>
         </div>

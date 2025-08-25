@@ -11,10 +11,21 @@ import { Product } from "@/types/product";
 import SimpleImageModal from "@/components/ui/SimpleImageModal";
 import ImageCarousel from "@/components/ui/ImageCarousel";
 import ProductDetailsModal from "@/components/ui/ProductDetailsModal";
+import OptimizedImage from "@/components/ui/OptimizedImage";
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  cover_image_url?: string;
+  cover_image_alt?: string;
+}
 
 const CategoryPage = () => {
   const { categorySlug } = useParams<{ categorySlug: string }>();
   const [products, setProducts] = useState<Product[]>([]);
+  const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [allImages, setAllImages] = useState<string[]>([]);
@@ -48,10 +59,10 @@ const CategoryPage = () => {
       
       setLoading(true);
       try {
-        // First get the category ID by slug
+        // Carregar categoria com campos de capa
         const { data: categoryData, error: categoryError } = await supabase
           .from('categories')
-          .select('id')
+          .select('id, name, slug, description, cover_image_url, cover_image_alt')
           .eq('slug', categorySlug)
           .single();
 
@@ -59,8 +70,12 @@ const CategoryPage = () => {
         
         if (!categoryData) {
           setProducts([]);
+          setCategory(null);
           return;
         }
+
+        console.log('Categoria carregada:', categoryData);
+        setCategory(categoryData);
 
         // Then get products by category_id with product_images
         const { data: productsData, error: productsError } = await supabase
@@ -117,8 +132,9 @@ const CategoryPage = () => {
     setSelectedProduct(null);
   };
 
-  const categoryTitle = categorySlug ? categoryTitles[categorySlug] : "Categoria";
-  const categoryDescription = categorySlug ? categoryDescriptions[categorySlug] : "";
+  // Use category data from database or fallback to hardcoded values
+  const categoryTitle = category?.name || (categorySlug ? categoryTitles[categorySlug] : "Categoria");
+  const categoryDescription = category?.description || (categorySlug ? categoryDescriptions[categorySlug] : "");
 
   return (
     <>
@@ -140,12 +156,28 @@ const CategoryPage = () => {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar para Coleções
             </Link>
-            <h1 className="text-3xl md:text-4xl font-bold text-sage-800 mb-2">
-              {categoryTitle}
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              {categoryDescription}
-            </p>
+            
+            {/* Category Header with Cover Image */}
+            <div className="flex flex-col md:flex-row gap-6 items-start">
+              {category?.cover_image_url && (
+                <div className="flex-shrink-0">
+                  <OptimizedImage
+                    src={category.cover_image_url}
+                    alt={category.cover_image_alt || category.name}
+                    className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-lg shadow-lg"
+                  />
+                </div>
+              )}
+              
+              <div className="flex-1">
+                <h1 className="text-3xl md:text-4xl font-bold text-sage-800 mb-2">
+                  {categoryTitle}
+                </h1>
+                <p className="text-lg text-muted-foreground">
+                  {categoryDescription}
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 

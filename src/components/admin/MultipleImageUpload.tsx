@@ -140,24 +140,28 @@ const MultipleImageUpload: React.FC<MultipleImageUploadProps> = ({
       <Label>Imagens do Produto</Label>
       
       {/* Upload Methods */}
-      <div className="flex gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4">
         <Button
           type="button"
           variant={uploadMethod === 'upload' ? 'default' : 'outline'}
           onClick={() => setUploadMethod('upload')}
           size="sm"
+          className="flex-1 sm:flex-none"
         >
           <Upload className="h-4 w-4 mr-2" />
-          Upload de Arquivos
+          <span className="hidden sm:inline">Upload de Arquivos</span>
+          <span className="sm:hidden">Upload</span>
         </Button>
         <Button
           type="button"
           variant={uploadMethod === 'url' ? 'default' : 'outline'}
           onClick={() => setUploadMethod('url')}
           size="sm"
+          className="flex-1 sm:flex-none"
         >
           <Link className="h-4 w-4 mr-2" />
-          URL da Imagem
+          <span className="hidden sm:inline">URL da Imagem</span>
+          <span className="sm:hidden">URL</span>
         </Button>
       </div>
 
@@ -177,17 +181,19 @@ const MultipleImageUpload: React.FC<MultipleImageUploadProps> = ({
           </p>
         </div>
       ) : (
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Input
             placeholder="https://exemplo.com/imagem.jpg"
             value={newImageUrl}
             onChange={(e) => setNewImageUrl(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleUrlAdd()}
+            className="flex-1"
           />
           <Button
             type="button"
             onClick={handleUrlAdd}
             disabled={!newImageUrl.trim()}
+            className="w-full sm:w-auto"
           >
             Adicionar
           </Button>
@@ -198,7 +204,7 @@ const MultipleImageUpload: React.FC<MultipleImageUploadProps> = ({
       {images.length > 0 && (
         <div className="space-y-4">
           <Label>Imagens Adicionadas ({images.length})</Label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {images.map((image, index) => (
               <div key={image.id} className="relative group">
                 <div className="aspect-square overflow-hidden rounded-lg border-2 border-gray-200">

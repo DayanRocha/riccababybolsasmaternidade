@@ -125,9 +125,9 @@ const CategoriesList = ({ onEdit, onAdd, refreshTrigger }: CategoriesListProps) 
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gerenciar Categorias</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Gerenciar Categorias</h2>
           {categories.length > 0 && (
             <p className="text-sm text-gray-600 mt-1">
               {categories.filter(cat => !cat.cover_image_url).length > 0 && (
@@ -138,9 +138,10 @@ const CategoriesList = ({ onEdit, onAdd, refreshTrigger }: CategoriesListProps) 
             </p>
           )}
         </div>
-        <Button onClick={onAdd} className="bg-pink-600 hover:bg-pink-700">
+        <Button onClick={onAdd} className="bg-pink-600 hover:bg-pink-700 w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
-          Nova Categoria
+          <span className="hidden sm:inline">Nova Categoria</span>
+          <span className="sm:hidden">Adicionar Categoria</span>
         </Button>
       </div>
 
@@ -237,7 +238,8 @@ const CategoriesList = ({ onEdit, onAdd, refreshTrigger }: CategoriesListProps) 
                     <p className="text-gray-600 mb-3 line-clamp-2">{category.description}</p>
                   )}
 
-                  <div className="flex flex-wrap gap-2">
+                  {/* Desktop buttons */}
+                  <div className="hidden sm:flex flex-wrap gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -286,6 +288,63 @@ const CategoriesList = ({ onEdit, onAdd, refreshTrigger }: CategoriesListProps) 
                       <Trash2 className="h-4 w-4 mr-1" />
                       Excluir
                     </Button>
+                  </div>
+
+                  {/* Mobile buttons */}
+                  <div className="sm:hidden space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onEdit(category)}
+                        className="flex-1"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleCategoryStatus(category)}
+                        className="flex-1"
+                      >
+                        {category.is_active ? (
+                          <>
+                            <EyeOff className="h-4 w-4 mr-1" />
+                            <span className="hidden xs:inline">Desativar</span>
+                            <span className="xs:hidden">Off</span>
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="h-4 w-4 mr-1" />
+                            <span className="hidden xs:inline">Ativar</span>
+                            <span className="xs:hidden">On</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {!category.cover_image_url && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onEdit(category)}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          <span className="text-xs">Add Capa</span>
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteCategory(category)}
+                        className={`text-red-600 hover:text-red-700 hover:bg-red-50 ${!category.cover_image_url ? '' : 'col-span-2'}`}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Excluir
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

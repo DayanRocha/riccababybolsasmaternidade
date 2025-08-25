@@ -37,16 +37,39 @@ const ProductsList = ({ onEdit, onAdd, refreshTrigger }: ProductsListProps) => {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Primeiro, tentar carregar com os campos de capa da categoria
+      let { data, error } = await supabase
         .from('products')
         .select(`
           *,
           categories (
-            name
+            id,
+            name,
+            cover_image_url,
+            cover_image_alt
           )
         `)
         .order('display_order', { ascending: true })
         .order('created_at', { ascending: false });
+
+      // Se der erro (provavelmente porque as colunas não existem), tentar sem os campos de capa
+      if (error && error.message.includes('column')) {
+        console.log('Colunas de capa da categoria não existem ainda, carregando sem elas...');
+        const fallbackQuery = await supabase
+          .from('products')
+          .select(`
+            *,
+            categories (
+              id,
+              name
+            )
+          `)
+          .order('display_order', { ascending: true })
+          .order('created_at', { ascending: false });
+        
+        data = fallbackQuery.data;
+        error = fallbackQuery.error;
+      }
 
       if (error) throw error;
       setProducts(data || []);
@@ -230,59 +253,68 @@ const ProductsList = ({ onEdit, onAdd, refreshTrigger }: ProductsListProps) => {
           </div>
 
           {/* Mobile Cards */}
-          <div className="lg:hidden space-y-4">
+          <div className="lg:hidden space-y-3">
             {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow p-4">
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
-                    {product.image_url ? (
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
-                        <span className="text-xs text-gray-500">Sem img</span>
+              <div key={product.id} className="bg-white rounded-lg shadow product-card-mobile">
+                <div className="space-y-3">
+                  {/* Header with image and basic info */}
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-14 h-14 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 bg-gray-200 rounded flex items-center justify-center">
+                          <span className="text-xs text-gray-500">Sem img</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-1">
+                        <h3 className="font-medium text-gray-900 text-sm truncate pr-2">{product.name}</h3>
+                        <Badge variant={product.is_active ? "default" : "secondary"} className="text-xs flex-shrink-0">
+                          {product.is_active ? 'Ativo' : 'Inativo'}
+                        </Badge>
                       </div>
-                    )}
+                      {product.description && (
+                        <p className="text-xs text-gray-500 mb-2 line-clamp-2">
+                          {product.description}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap gap-1">
+                        <Badge variant="secondary" className="text-xs">
+                          {product.categories?.name || 'Sem categoria'}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          Ordem: {product.display_order}
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
-                      <Badge variant={product.is_active ? "default" : "secondary"} className="ml-2">
-                        {product.is_active ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </div>
-                    {product.description && (
-                      <p className="text-sm text-gray-500 mb-2 line-clamp-2">
-                        {product.description}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      <Badge variant="secondary" className="text-xs">
-                        {product.categories?.name || 'Sem categoria'}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        Ordem: {product.display_order}
-                      </Badge>
-                    </div>
-                    <div className="flex gap-2">
+                  
+                  {/* Actions */}
+                  <div className="product-actions">
+                    <div className="product-grid-actions">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleActive(product)}
-                        className="flex-1"
+                        className="text-xs h-8"
                       >
                         {product.is_active ? (
                           <>
-                            <EyeOff className="h-4 w-4 mr-1" />
-                            Desativar
+                            <EyeOff className="h-3 w-3 mr-1" />
+                            <span className="hidden xs:inline">Desativar</span>
+                            <span className="xs:hidden">Off</span>
                           </>
                         ) : (
                           <>
-                            <Eye className="h-4 w-4 mr-1" />
-                            Ativar
+                            <Eye className="h-3 w-3 mr-1" />
+                            <span className="hidden xs:inline">Ativar</span>
+                            <span className="xs:hidden">On</span>
                           </>
                         )}
                       </Button>
@@ -290,20 +322,21 @@ const ProductsList = ({ onEdit, onAdd, refreshTrigger }: ProductsListProps) => {
                         variant="ghost"
                         size="sm"
                         onClick={() => onEdit(product)}
-                        className="flex-1"
+                        className="text-xs h-8"
                       >
-                        <Edit className="h-4 w-4 mr-1" />
+                        <Edit className="h-3 w-3 mr-1" />
                         Editar
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeleteProduct(product)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeleteProduct(product)}
+                      className="product-delete-btn w-full text-red-600 hover:text-red-800 text-xs h-8 mt-2"
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Excluir
+                    </Button>
                   </div>
                 </div>
               </div>
