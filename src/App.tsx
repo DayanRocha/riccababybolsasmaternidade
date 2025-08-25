@@ -9,6 +9,8 @@ import { HelmetProvider } from 'react-helmet-async';
 
 // Lazy loading das páginas
 const Index = lazy(() => import("./pages/Index"));
+const Collections = lazy(() => import("./pages/Collections"));
+const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const Admin = lazy(() => import("./pages/Admin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -34,6 +36,8 @@ const App = () => (
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/collections" element={<Collections />} />
+              <Route path="/category/:categorySlug" element={<CategoryPage />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

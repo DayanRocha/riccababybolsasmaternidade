@@ -1,5 +1,6 @@
 
 import OptimizedImage from '@/components/ui/OptimizedImage';
+import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
@@ -29,12 +30,12 @@ const Hero = () => {
               </svg>
               <span>Fale Conosco</span>
             </a>
-            <button 
-              onClick={() => document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' })}
-              className="px-8 py-4 border-2 border-white text-white font-semibold rounded-full backdrop-blur-sm bg-white/20 shadow-lg"
+            <Link 
+              to="/collections"
+              className="inline-block px-8 py-4 border-2 border-white text-white font-semibold rounded-full backdrop-blur-sm bg-white/20 shadow-lg hover:bg-white/30 transition-all duration-300"
             >
-              Ver Coleção Completa
-            </button>
+              Ver Coleções
+            </Link>
           </div>
           
           <div className="hidden sm:block">
@@ -64,12 +65,12 @@ const Hero = () => {
               </svg>
               <span className="relative z-10">Fale Conosco</span>
             </a>
-            <button 
-              onClick={() => document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' })}
-              className="px-8 py-4 border-2 border-primary-foreground text-primary-foreground font-semibold rounded-full hover:bg-primary-foreground hover:text-primary transition-all duration-300 transform hover:scale-105"
+            <Link 
+              to="/collections"
+              className="inline-block px-8 py-4 border-2 border-primary-foreground text-primary-foreground font-semibold rounded-full hover:bg-primary-foreground hover:text-primary transition-all duration-300 transform hover:scale-105"
             >
-              Ver Coleção Completa
-            </button>
+              Ver Coleções
+            </Link>
           </div>
         </div>
       </div>
