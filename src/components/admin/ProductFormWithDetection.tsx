@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -36,36 +37,18 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
   const [categories, setCategories] = useState<Category[]>([]);
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [multipleImagesSupported, setMultipleImagesSupported] = useState(false);
+  const [multipleImagesSupported, setMultipleImagesSupported] = useState(true); // Ativado agora que a tabela existe
   const { toast } = useToast();
 
   useEffect(() => {
     loadCategories();
-    checkMultipleImagesSupport();
     if (product) {
       setFormData(product);
-      if (multipleImagesSupported) {
+      if (product.id) {
         loadProductImages(product.id);
       }
     }
-  }, [product, multipleImagesSupported]);
-
-  const checkMultipleImagesSupport = async () => {
-    try {
-      const { error } = await supabase
-        .from('product_images')
-        .select('id')
-        .limit(1);
-
-      if (!error) {
-        setMultipleImagesSupported(true);
-        console.log('Sistema de múltiplas imagens ativado!');
-      }
-    } catch (error) {
-      console.log('Sistema de múltiplas imagens não disponível ainda');
-      setMultipleImagesSupported(false);
-    }
-  };
+  }, [product]);
 
   const loadCategories = async () => {
     const { data, error } = await supabase
@@ -85,8 +68,6 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
   };
 
   const loadProductImages = async (productId: string) => {
-    if (!multipleImagesSupported) return;
-    
     try {
       const { data, error } = await supabase
         .from('product_images')
@@ -95,41 +76,49 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
         .order('display_order');
 
       if (error) throw error;
+      
+      console.log('Loaded product images:', data);
       setProductImages(data || []);
     } catch (error: any) {
       console.error('Error loading product images:', error);
+      // Se der erro, ainda mantemos o suporte ativo mas com array vazio
+      setProductImages([]);
     }
   };
 
   const saveProductImages = async (productId: string) => {
-    if (!multipleImagesSupported || productImages.length === 0) return;
+    if (productImages.length === 0) return;
     
     try {
       // Primeiro, deletar imagens existentes se estamos editando
       if (product?.id) {
-        await supabase
+        const { error: deleteError } = await supabase
           .from('product_images')
           .delete()
           .eq('product_id', productId);
+        
+        if (deleteError) throw deleteError;
       }
 
       // Inserir novas imagens
       const imagesToInsert = productImages.map((img, index) => ({
         product_id: productId,
         image_url: img.image_url,
-        image_alt: img.image_alt,
+        image_alt: img.image_alt || 'Produto Ricca Baby',
         display_order: index,
-        is_primary: img.is_primary || index === 0
+        is_primary: index === 0 || img.is_primary,
       }));
 
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('product_images')
         .insert(imagesToInsert);
 
-      if (error) throw error;
+      if (insertError) throw insertError;
+      
+      console.log('Product images saved successfully');
     } catch (error: any) {
       console.error('Error saving product images:', error);
-      throw error;
+      throw error; // Re-throw para ser capturado no handleSubmit
     }
   };
 
@@ -201,8 +190,8 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
         console.log('Product created:', data);
       }
 
-      // Salvar imagens se suportado
-      if (multipleImagesSupported) {
+      // Salvar imagens se suportado e há imagens
+      if (multipleImagesSupported && productImages.length > 0) {
         await saveProductImages(savedProductId);
       }
       
@@ -279,56 +268,12 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
             />
           </div>
 
-          {/* Sistema de imagens - adaptativo */}
-          {multipleImagesSupported ? (
-            <MultipleImageUpload
-              productId={product?.id}
-              images={productImages}
-              onImagesChange={setProductImages}
-            />
-          ) : (
-            <div className="space-y-4">
-              <Label>Imagem do Produto</Label>
-              
-              <div className="space-y-4 p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
-                <div className="flex items-center gap-2 text-yellow-800">
-                  <span>⚠️</span>
-                  <span className="font-medium">Sistema de imagem única (modo compatibilidade)</span>
-                </div>
-                
-                <div className="space-y-2">
-                  <Input
-                    placeholder="https://exemplo.com/imagem.jpg"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                  />
-                </div>
-
-                {formData.image_url && (
-                  <div className="relative">
-                    <img
-                      src={formData.image_url}
-                      alt="Preview"
-                      className="w-32 h-32 object-cover rounded-lg border"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="absolute -top-2 -right-2"
-                      onClick={() => setFormData(prev => ({ ...prev, image_url: '', image_alt: '' }))}
-                    >
-                      ×
-                    </Button>
-                  </div>
-                )}
-                
-                <p className="text-sm text-yellow-700">
-                  Para ativar múltiplas imagens, aplique a migração do banco de dados conforme instruções no arquivo APLICAR_MIGRACAO.md
-                </p>
-              </div>
-            </div>
-          )}
+          {/* Sistema de imagens - múltiplas imagens ativadas */}
+          <MultipleImageUpload
+            productId={product?.id}
+            images={productImages}
+            onImagesChange={setProductImages}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="whatsapp_link">Link do WhatsApp</Label>

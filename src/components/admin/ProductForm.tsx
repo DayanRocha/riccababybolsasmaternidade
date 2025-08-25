@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,6 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     display_order: 0,
   });
   const [categories, setCategories] = useState<Category[]>([]);
-  const [productImages, setProductImages] = useState<ProductImage[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -41,7 +41,6 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
     loadCategories();
     if (product) {
       setFormData(product);
-      loadProductImages(product.id);
     }
   }, [product]);
 
@@ -59,75 +58,6 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
       });
     } else {
       setCategories(data || []);
-    }
-  };
-
-  const loadProductImages = async (productId: string) => {
-    try {
-      // Verificar se a tabela product_images existe
-      const { data, error } = await supabase
-        .from('product_images')
-        .select('*')
-        .eq('product_id', productId)
-        .order('display_order')
-        .limit(1);
-
-      if (error && error.message.includes('product_images')) {
-        console.log('Tabela product_images ainda não existe, usando sistema legado');
-        return;
-      }
-
-      if (error) throw error;
-      setProductImages(data || []);
-    } catch (error: any) {
-      console.error('Error loading product images:', error);
-      // Se a tabela não existe, não fazer nada (usar sistema legado)
-    }
-  };
-
-  const saveProductImages = async (productId: string) => {
-    try {
-      // Verificar se a tabela product_images existe tentando fazer uma consulta simples
-      const { error: checkError } = await supabase
-        .from('product_images')
-        .select('id')
-        .limit(1);
-
-      if (checkError && checkError.message.includes('product_images')) {
-        console.log('Tabela product_images ainda não existe, pulando salvamento de múltiplas imagens');
-        return;
-      }
-
-      // Primeiro, deletar imagens existentes se estamos editando
-      if (product?.id) {
-        await supabase
-          .from('product_images')
-          .delete()
-          .eq('product_id', productId);
-      }
-
-      // Inserir novas imagens
-      if (productImages.length > 0) {
-        const imagesToInsert = productImages.map((img, index) => ({
-          product_id: productId,
-          image_url: img.image_url,
-          image_alt: img.image_alt,
-          display_order: index,
-          is_primary: img.is_primary || index === 0
-        }));
-
-        const { error } = await supabase
-          .from('product_images')
-          .insert(imagesToInsert);
-
-        if (error) throw error;
-      }
-    } catch (error: any) {
-      console.error('Error saving product images:', error);
-      // Se a tabela não existe, não falhar o salvamento do produto
-      if (!error.message.includes('product_images')) {
-        throw error;
-      }
     }
   };
 
@@ -158,8 +88,6 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
 
       console.log('Saving product data:', productData);
 
-      let savedProductId: string;
-
       if (product?.id) {
         // Update existing product
         const { data, error } = await supabase
@@ -176,7 +104,6 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
           throw error;
         }
         
-        savedProductId = product.id;
         console.log('Product updated:', data);
       } else {
         // Create new product
@@ -190,15 +117,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
           throw error;
         }
         
-        savedProductId = data[0].id;
         console.log('Product created:', data);
-      }
-
-      // Salvar imagens (se a tabela existir)
-      try {
-        await saveProductImages(savedProductId);
-      } catch (error: any) {
-        console.log('Múltiplas imagens não disponíveis ainda:', error.message);
       }
       
       toast({
@@ -272,7 +191,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
           <div className="space-y-4">
             <Label>Imagem do Produto</Label>
             
-            {/* Sistema temporário de imagem única até a migração ser aplicada */}
+            {/* Sistema temporário de imagem única */}
             <div className="space-y-4">
               <div className="flex gap-4 mb-4">
                 <Button
@@ -312,7 +231,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
               )}
               
               <p className="text-sm text-gray-500">
-                Sistema de múltiplas imagens será ativado após aplicar a migração do banco de dados.
+                Sistema de múltiplas imagens será ativado quando os tipos do Supabase forem atualizados automaticamente.
               </p>
             </div>
           </div>
