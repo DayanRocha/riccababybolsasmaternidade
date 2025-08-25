@@ -1,215 +1,111 @@
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Expand } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import OptimizedImage from './OptimizedImage';
-import ImageModal from './ImageModal';
-import { ProductImage } from '@/types/product';
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from './button';
 
 interface ImageCarouselProps {
-  images: ProductImage[];
-  productName: string;
+  images: Array<{
+    url: string;
+    alt: string;
+  }>;
+  onImageClick?: (imageUrl: string) => void;
   className?: string;
 }
 
-const ImageCarousel: React.FC<ImageCarouselProps> = ({ 
-  images, 
-  productName, 
-  className = "" 
-}) => {
+const ImageCarousel = ({ images, onImageClick, className = "" }: ImageCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
-  // Filtrar imagens válidas (sem erro de carregamento)
-  const validImages = images?.filter(img => 
-    img && 
-    img.image_url && 
-    typeof img.image_url === 'string' && 
-    img.image_url.trim() !== '' &&
-    !imageErrors.has(img.id)
-  ) || [];
-
-  const handleImageError = (imageId: string) => {
-    setImageErrors(prev => new Set([...prev, imageId]));
-    // Se a imagem atual falhou, mover para a próxima válida
-    if (validImages[currentIndex]?.id === imageId && validImages.length > 1) {
-      const nextValidIndex = validImages.findIndex((img, index) => 
-        index > currentIndex && !imageErrors.has(img.id)
-      );
-      if (nextValidIndex !== -1) {
-        setCurrentIndex(nextValidIndex);
-      } else {
-        setCurrentIndex(0);
-      }
-    }
-  };
-
-  const openModal = () => {
-    console.log('Opening modal for:', productName);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    console.log('Closing modal for:', productName);
-    setIsModalOpen(false);
-  };
-
-  if (!validImages || validImages.length === 0) {
+  if (!images || images.length === 0) {
     return (
-      <div className={`relative aspect-square overflow-hidden rounded-lg group cursor-pointer ${className}`}>
-        <OptimizedImage 
-          src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop&crop=center"
-          alt={`${productName} - Bolsa maternidade Ricca Baby`}
-          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-          onClick={openModal}
-        />
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center pointer-events-none">
-          <Expand className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" size={32} />
-        </div>
-        {/* Indicador de imagem padrão */}
-        <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-          Imagem padrão
-        </div>
-        
-        <ImageModal
-          images={[{
-            id: 'default',
-            product_id: '',
-            image_url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop&crop=center",
-            image_alt: `${productName} - Bolsa maternidade Ricca Baby`,
-            display_order: 0,
-            is_primary: true
-          }]}
-          initialIndex={0}
-          isOpen={isModalOpen}
-          onClose={closeModal}
-          productName={productName}
-        />
+      <div className={`aspect-square bg-gray-200 rounded-lg flex items-center justify-center ${className}`}>
+        <span className="text-gray-500">Sem imagem</span>
       </div>
     );
   }
 
-  if (validImages.length === 1) {
-    return (
-      <>
-        <div className={`relative aspect-square overflow-hidden rounded-lg group cursor-pointer ${className}`}>
-          <OptimizedImage 
-            src={validImages[0].image_url}
-            alt={validImages[0].image_alt || `${productName} - Bolsa maternidade Ricca Baby`}
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-            onClick={openModal}
-            onError={() => handleImageError(validImages[0].id)}
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center pointer-events-none">
-            <Expand className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" size={32} />
-          </div>
-        </div>
-        
-        <ImageModal
-          images={validImages}
-          initialIndex={0}
-          isOpen={isModalOpen}
-          onClose={closeModal}
-          productName={productName}
-        />
-      </>
+  const goToPrevious = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prevIndex) => 
+      prevIndex === 0 ? images.length - 1 : prevIndex - 1
     );
-  }
-
-  const nextImage = () => {
-    console.log('Next image clicked');
-    setCurrentIndex((prev) => (prev + 1) % validImages.length);
   };
 
-  const prevImage = () => {
-    console.log('Previous image clicked');
-    setCurrentIndex((prev) => (prev - 1 + validImages.length) % validImages.length);
+  const goToNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prevIndex) => 
+      prevIndex === images.length - 1 ? 0 : prevIndex + 1
+    );
   };
 
-  const goToImage = (index: number) => {
-    console.log('Go to image:', index);
+  const goToSlide = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
     setCurrentIndex(index);
   };
 
+  const handleImageClick = () => {
+    if (onImageClick && images[currentIndex]) {
+      onImageClick(images[currentIndex].url);
+    }
+  };
+
   return (
-    <>
-      <div className={`relative group ${className}`}>
-        {/* Main Image */}
-        <div className="aspect-square overflow-hidden rounded-lg cursor-pointer relative" onClick={openModal}>
-          <OptimizedImage 
-            src={validImages[currentIndex].image_url}
-            alt={validImages[currentIndex].image_alt || `${productName} - Bolsa maternidade Ricca Baby`}
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-            onError={() => handleImageError(validImages[currentIndex].id)}
-          />
-          {/* Overlay com ícone de expandir */}
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center pointer-events-none">
-            <Expand className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" size={32} />
-          </div>
+    <div className={`relative group ${className}`}>
+      {/* Main Image */}
+      <div 
+        className="aspect-square overflow-hidden rounded-lg cursor-pointer"
+        onClick={handleImageClick}
+      >
+        <img
+          src={images[currentIndex].url}
+          alt={images[currentIndex].alt}
+          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+        />
+      </div>
+
+      {/* Navigation Arrows - Only show if more than 1 image */}
+      {images.length > 1 && (
+        <>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 h-8 w-8"
+            onClick={goToPrevious}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 h-8 w-8"
+            onClick={goToNext}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </>
+      )}
+
+      {/* Dots Indicator - Only show if more than 1 image */}
+      {images.length > 1 && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              className={`w-2 h-2 rounded-full transition-colors duration-200 ${
+                index === currentIndex ? 'bg-white' : 'bg-white/50'
+              }`}
+              onClick={(e) => goToSlide(index, e)}
+            />
+          ))}
         </div>
-
-      {/* Navigation Arrows */}
-      <Button
-        variant="secondary"
-        size="sm"
-        className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 sm:opacity-70 transition-opacity duration-200 h-10 w-10 md:h-8 md:w-8 p-0 z-10 bg-white/80 hover:bg-white/90 shadow-md touch-manipulation"
-        onClick={(e) => {
-          e.stopPropagation();
-          prevImage();
-        }}
-        aria-label="Imagem anterior"
-      >
-        <ChevronLeft className="h-5 w-5 md:h-4 md:w-4" />
-      </Button>
-
-      <Button
-        variant="secondary"
-        size="sm"
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 sm:opacity-70 transition-opacity duration-200 h-10 w-10 md:h-8 md:w-8 p-0 z-10 bg-white/80 hover:bg-white/90 shadow-md touch-manipulation"
-        onClick={(e) => {
-          e.stopPropagation();
-          nextImage();
-        }}
-        aria-label="Próxima imagem"
-      >
-        <ChevronRight className="h-5 w-5 md:h-4 md:w-4" />
-      </Button>
+      )}
 
       {/* Image Counter */}
-      <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-        {currentIndex + 1} / {validImages.length}
-      </div>
-
-      {/* Dots Indicator */}
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-        {validImages.map((_, index) => (
-          <button
-            key={index}
-            className={`w-4 h-4 md:w-3 md:h-3 rounded-full transition-all duration-200 touch-manipulation ${
-              index === currentIndex 
-                ? 'bg-white shadow-md' 
-                : 'bg-white/50 hover:bg-white/75 active:bg-white/90'
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              goToImage(index);
-            }}
-            aria-label={`Ir para imagem ${index + 1}`}
-          />
-        ))}
-      </div>
-
-
+      {images.length > 1 && (
+        <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          {currentIndex + 1} / {images.length}
+        </div>
+      )}
     </div>
-    
-    <ImageModal
-      images={validImages}
-      initialIndex={currentIndex}
-      isOpen={isModalOpen}
-      onClose={closeModal}
-      productName={productName}
-    />
-  </>
   );
 };
 

@@ -9,6 +9,8 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/product";
 import ImageModal from "@/components/ui/ImageModal";
+import ImageCarousel from "@/components/ui/ImageCarousel";
+import ProductDetailsModal from "@/components/ui/ProductDetailsModal";
 
 const CategoryPage = () => {
   const { categorySlug } = useParams<{ categorySlug: string }>();
@@ -16,6 +18,7 @@ const CategoryPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [allImages, setAllImages] = useState<string[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const categoryTitles: Record<string, string> = {
     "bolsas-maternidade": "Bolsas Maternidade",
@@ -106,6 +109,14 @@ const CategoryPage = () => {
     setSelectedImage(imageUrl);
   };
 
+  const handleProductDetails = (product: Product) => {
+    setSelectedProduct(product);
+  };
+
+  const handleCloseProductDetails = () => {
+    setSelectedProduct(null);
+  };
+
   const categoryTitle = categorySlug ? categoryTitles[categorySlug] : "Categoria";
   const categoryDescription = categorySlug ? categoryDescriptions[categorySlug] : "";
 
@@ -156,59 +167,60 @@ const CategoryPage = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {products.map((product) => (
-                  <div key={product.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                    <div className="aspect-square overflow-hidden cursor-pointer" onClick={() => handleImageClick(product.image_url)}>
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                {products.map((product) => {
+                  // Prepare images for carousel
+                  const carouselImages = [];
+                  
+                  // Add main image first
+                  if (product.image_url) {
+                    carouselImages.push({
+                      url: product.image_url,
+                      alt: product.image_alt || product.name
+                    });
+                  }
+
+                  // Add additional images
+                  if (product.product_images) {
+                    product.product_images
+                      .filter(img => !img.is_primary)
+                      .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                      .forEach(img => {
+                        carouselImages.push({
+                          url: img.image_url,
+                          alt: img.image_alt || product.name
+                        });
+                      });
+                  }
+
+                  return (
+                    <div key={product.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                      {/* Image Carousel */}
+                      <ImageCarousel
+                        images={carouselImages}
+                        onImageClick={handleImageClick}
+                        className="w-full"
                       />
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-xl font-semibold mb-2 text-sage-800">
-                        {product.name}
-                      </h3>
-                      {product.description && (
-                        <p className="text-muted-foreground mb-4 line-clamp-2">
-                          {product.description}
-                        </p>
-                      )}
-                      {product.price && (
-                        <p className="text-2xl font-bold text-sage-600 mb-4">
-                          R$ {product.price.toFixed(2)}
-                        </p>
-                      )}
                       
-                      {/* Additional Images */}
-                      {product.product_images && product.product_images.length > 0 && (
-                        <div className="flex gap-2 mb-4 overflow-x-auto">
-                          {product.product_images
-                            .filter(img => !img.is_primary)
-                            .slice(0, 3)
-                            .map((image, index) => (
-                            <img
-                              key={image.id}
-                              src={image.image_url}
-                              alt={image.image_alt || `${product.name} - ${index + 2}`}
-                              className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
-                              onClick={() => handleImageClick(image.image_url)}
-                            />
-                          ))}
-                          {product.product_images.filter(img => !img.is_primary).length > 3 && (
-                            <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center text-sm text-gray-600 flex-shrink-0">
-                              +{product.product_images.filter(img => !img.is_primary).length - 3}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      <Button className="w-full bg-sage-600 hover:bg-sage-700">
-                        Ver Detalhes
-                      </Button>
+                      <div className="p-6">
+                        <h3 className="text-xl font-semibold mb-2 text-sage-800">
+                          {product.name}
+                        </h3>
+                        {product.description && (
+                          <p className="text-muted-foreground mb-4 line-clamp-2">
+                            {product.description}
+                          </p>
+                        )}
+                        
+                        <Button 
+                          className="w-full bg-sage-600 hover:bg-sage-700"
+                          onClick={() => handleProductDetails(product)}
+                        >
+                          Ver Detalhes
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -224,6 +236,15 @@ const CategoryPage = () => {
             alt="Produto"
             onClose={() => setSelectedImage(null)}
             allImages={allImages}
+          />
+        )}
+
+        {/* Product Details Modal */}
+        {selectedProduct && (
+          <ProductDetailsModal
+            product={selectedProduct}
+            onClose={handleCloseProductDetails}
+            onImageClick={handleImageClick}
           />
         )}
       </div>
