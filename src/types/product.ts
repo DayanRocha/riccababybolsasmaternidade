@@ -1,4 +1,17 @@
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  cover_image_url?: string;
+  cover_image_alt?: string;
+  display_order: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface ProductImage {
   id: string;
   product_id: string;

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/product";
-import ImageModal from "@/components/ui/ImageModal";
+import SimpleImageModal from "@/components/ui/SimpleImageModal";
 import ImageCarousel from "@/components/ui/ImageCarousel";
 import ProductDetailsModal from "@/components/ui/ProductDetailsModal";
 
@@ -227,11 +227,14 @@ const CategoryPage = () => {
         </section>
 
         <Footer />
-        <WhatsAppButton />
+        <WhatsAppButton 
+          categoryName={categoryTitle}
+          categoryImage={products.length > 0 ? products[0].image_url : undefined}
+        />
         
         {/* Image Modal */}
         {selectedImage && (
-          <ImageModal
+          <SimpleImageModal
             imageUrl={selectedImage}
             alt="Produto"
             onClose={() => setSelectedImage(null)}

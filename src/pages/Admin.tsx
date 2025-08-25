@@ -6,9 +6,10 @@ import AuthForm from '@/components/admin/AuthForm';
 import AdminLayout from '@/components/admin/AdminLayout';
 import ProductsList from '@/components/admin/ProductsList';
 import ProductFormWithDetection from '@/components/admin/ProductFormWithDetection';
+
 import SEO from '@/components/SEO';
 import { useToast } from '@/hooks/use-toast';
-import { Product } from '@/types/product';
+import { Product, Category } from '@/types/product';
 
 const AUTHORIZED_ADMIN_EMAIL = 'dayan_erikas2@hotmail.com';
 
@@ -17,8 +18,9 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAuthorizedEmail, setIsAuthorizedEmail] = useState(false);
-  const [currentView, setCurrentView] = useState<'list' | 'form'>('list');
+  const [currentView, setCurrentView] = useState<'products' | 'product-form' | 'category-form'>('products');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toast } = useToast();
 
@@ -164,23 +166,39 @@ const Admin = () => {
 
   const handleAddProduct = () => {
     setEditingProduct(null);
-    setCurrentView('form');
+    setCurrentView('product-form');
   };
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
-    setCurrentView('form');
+    setCurrentView('product-form');
   };
 
   const handleSaveProduct = () => {
-    setCurrentView('list');
+    setCurrentView('products');
     setEditingProduct(null);
     setRefreshTrigger(prev => prev + 1);
   };
 
-  const handleCancelEdit = () => {
-    setCurrentView('list');
+  const handleCancelProductEdit = () => {
+    setCurrentView('products');
     setEditingProduct(null);
+  };
+
+  const handleEditCategoryFromProducts = (category: Category) => {
+    setEditingCategory(category);
+    setCurrentView('category-form');
+  };
+
+  const handleSaveCategory = () => {
+    setCurrentView('products');
+    setEditingCategory(null);
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleCancelCategoryEdit = () => {
+    setCurrentView('products');
+    setEditingCategory(null);
   };
 
   // Phase 5: Better session validation
@@ -237,19 +255,34 @@ const Admin = () => {
         description="Painel administrativo para gerenciar produtos da Ricca Baby"
         url="https://riccababy.com/admin"
       />
-      <AdminLayout userEmail={user.email}>
+      <AdminLayout 
+        userEmail={user.email}
+        currentView={currentView}
+        onViewChange={(view) => setCurrentView(view)}
+      >
         <div className="px-4 py-6">
-          {currentView === 'list' ? (
+          {currentView === 'products' && (
             <ProductsList
               onEdit={handleEditProduct}
               onAdd={handleAddProduct}
+              onEditCategory={handleEditCategoryFromProducts}
               refreshTrigger={refreshTrigger}
             />
-          ) : (
+          )}
+          
+          {currentView === 'product-form' && (
             <ProductFormWithDetection
               product={editingProduct}
               onSave={handleSaveProduct}
-              onCancel={handleCancelEdit}
+              onCancel={handleCancelProductEdit}
+            />
+          )}
+
+          {currentView === 'category-form' && (
+            <CategoryForm
+              category={editingCategory}
+              onSave={handleSaveCategory}
+              onCancel={handleCancelCategoryEdit}
             />
           )}
         </div>

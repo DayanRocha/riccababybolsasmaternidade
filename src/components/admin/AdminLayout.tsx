@@ -2,15 +2,17 @@
 import React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { LogOut, Package, Settings } from 'lucide-react';
+import { LogOut, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
   userEmail?: string;
+  currentView?: string;
+  onViewChange?: (view: 'products') => void;
 }
 
-const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
+const AdminLayout = ({ children, userEmail, currentView, onViewChange }: AdminLayoutProps) => {
   const { toast } = useToast();
 
   const handleLogout = async () => {
@@ -59,6 +61,8 @@ const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
             </div>
           </div>
         </div>
+
+        {/* Navigation - Removed categories tab */}
       </header>
 
       {/* Main content */}

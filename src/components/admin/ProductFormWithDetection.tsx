@@ -7,14 +7,19 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Product, ProductImage } from '@/types/product';
 import { productSchema } from '@/schemas/productSchema';
 import MultipleImageUpload from './MultipleImageUpload';
+import { Image, AlertCircle, Upload, X } from 'lucide-react';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 
 interface Category {
   id: string;
   name: string;
+  cover_image_url?: string;
+  cover_image_alt?: string;
 }
 
 interface ProductFormProps {
@@ -38,6 +43,9 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [multipleImagesSupported, setMultipleImagesSupported] = useState(true); // Ativado agora que a tabela existe
+  const [categoryImageFile, setCategoryImageFile] = useState<File | null>(null);
+  const [categoryImagePreview, setCategoryImagePreview] = useState<string>('');
+  const [showCategoryImageEdit, setShowCategoryImageEdit] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -53,7 +61,7 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
   const loadCategories = async () => {
     const { data, error } = await supabase
       .from('categories')
-      .select('*')
+      .select('id, name, cover_image_url, cover_image_alt')
       .order('name');
     
     if (error) {
@@ -84,6 +92,80 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
       // Se der erro, ainda mantemos o suporte ativo mas com array vazio
       setProductImages([]);
     }
+  };
+
+  const handleCategoryImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCategoryImageFile(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setCategoryImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeCategoryImage = () => {
+    setCategoryImageFile(null);
+    setCategoryImagePreview('');
+  };
+
+  const uploadCategoryImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `category-${Date.now()}.${fileExt}`;
+    const filePath = `categories/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
+  const saveCategoryImage = async () => {
+    if (!categoryImageFile || !formData.category_id) return;
+
+    try {
+      const imageUrl = await uploadCategoryImage(categoryImageFile);
+      
+      const { error } = await supabase
+        .from('categories')
+        .update({
+          cover_image_url: imageUrl,
+          cover_image_alt: `Capa da categoria`
+        })
+        .eq('id', formData.category_id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Capa da categoria atualizada com sucesso!",
+      });
+
+      // Recarregar categorias para atualizar a interface
+      await loadCategories();
+      setShowCategoryImageEdit(false);
+      setCategoryImageFile(null);
+      setCategoryImagePreview('');
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar capa da categoria: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getSelectedCategory = () => {
+    return categories.find(cat => cat.id === formData.category_id);
   };
 
   const saveProductImages = async (productId: string) => {
@@ -242,7 +324,12 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
             <Label htmlFor="category">Categoria *</Label>
             <Select
               value={formData.category_id}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+              onValueChange={(value) => {
+                setFormData(prev => ({ ...prev, category_id: value }));
+                setShowCategoryImageEdit(false);
+                setCategoryImageFile(null);
+                setCategoryImagePreview('');
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma categoria" />
@@ -250,12 +337,143 @@ const ProductFormWithDetection = ({ product, onSave, onCancel }: ProductFormProp
               <SelectContent>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
-                    {category.name}
+                    <div className="flex items-center gap-2">
+                      {category.name}
+                      {!category.cover_image_url && (
+                        <Badge variant="outline" className="text-orange-600 border-orange-200 text-xs">
+                          Sem capa
+                        </Badge>
+                      )}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+
+          {/* Category Cover Management */}
+          {formData.category_id && (
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-sm font-medium">Capa da Categoria</Label>
+                {getSelectedCategory() && !getSelectedCategory()?.cover_image_url && (
+                  <Badge variant="outline" className="text-orange-600 border-orange-200">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    Sem capa
+                  </Badge>
+                )}
+              </div>
+
+              {!showCategoryImageEdit ? (
+                <div className="space-y-3">
+                  {getSelectedCategory()?.cover_image_url ? (
+                    <div className="flex items-center gap-3">
+                      <OptimizedImage
+                        src={getSelectedCategory()!.cover_image_url}
+                        alt={getSelectedCategory()!.cover_image_alt || getSelectedCategory()!.name}
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600">Categoria possui capa</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowCategoryImageEdit(true)}
+                          className="mt-1"
+                        >
+                          <Image className="h-3 w-3 mr-1" />
+                          Alterar Capa
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <AlertCircle className="h-8 w-8 text-orange-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600 mb-3">
+                        Esta categoria não possui capa de imagem
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowCategoryImageEdit(true)}
+                        className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                      >
+                        <Upload className="h-3 w-3 mr-1" />
+                        Adicionar Capa
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {categoryImagePreview ? (
+                    <div className="relative">
+                      <OptimizedImage
+                        src={categoryImagePreview}
+                        alt="Preview da capa"
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={removeCategoryImage}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                      <Upload className="h-6 w-6 mx-auto text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600 mb-2">
+                        Selecione uma imagem para a capa da categoria
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCategoryImageChange}
+                        className="hidden"
+                        id="category-image-upload"
+                      />
+                      <Label htmlFor="category-image-upload" className="cursor-pointer">
+                        <Button type="button" variant="outline" size="sm" asChild>
+                          <span>Escolher Arquivo</span>
+                        </Button>
+                      </Label>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowCategoryImageEdit(false);
+                        setCategoryImageFile(null);
+                        setCategoryImagePreview('');
+                      }}
+                      className="flex-1"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={saveCategoryImage}
+                      disabled={!categoryImageFile}
+                      className="flex-1 bg-pink-600 hover:bg-pink-700"
+                    >
+                      Salvar Capa
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="description">Descrição</Label>

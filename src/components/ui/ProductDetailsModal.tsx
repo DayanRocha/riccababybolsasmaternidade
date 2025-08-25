@@ -42,7 +42,25 @@ const ProductDetailsModal = ({ product, onClose, onImageClick }: ProductDetailsM
     if (product.whatsapp_link) {
       window.open(product.whatsapp_link, '_blank');
     } else {
-      const message = `Olá! Tenho interesse no produto: ${product.name}`;
+      // Create a detailed message with product information
+      const categoryName = product.categories?.name || 'Produto';
+      const productImage = product.image_url || (product.product_images && product.product_images[0]?.image_url);
+      
+      let message = `🌟 Olá! Tenho interesse nesta ${categoryName.toLowerCase()}:\n\n`;
+      message += `📝 *${product.name}*\n`;
+      
+      if (product.description) {
+        message += `\n📋 Descrição: ${product.description}\n`;
+      }
+      
+      message += `\n🔗 Link do produto: ${window.location.href}`;
+      
+      if (productImage) {
+        message += `\n\n📸 Imagem: ${productImage}`;
+      }
+      
+      message += `\n\n💬 Gostaria de saber mais informações sobre disponibilidade, preço e formas de pagamento.`;
+      
       const whatsappUrl = `https://wa.me/5518996125628?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, '_blank');
     }
