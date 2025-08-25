@@ -70,8 +70,8 @@ const ProductsSection = () => {
         <h2 className="section-title">Bolsas Maternidade</h2>
         
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {Array.from({ length: 6 }).map((_, index) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, index) => (
               <ProductSkeleton key={index} />
             ))}
           </div>
@@ -81,7 +81,7 @@ const ProductsSection = () => {
             <p className="text-sm mt-2">Novos produtos em breve!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map((product) => (
               <ProductCard
                 key={product.id}

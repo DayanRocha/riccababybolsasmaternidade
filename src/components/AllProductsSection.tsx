@@ -113,8 +113,8 @@ const AllProductsSection = () => {
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="section-title">Todos os Produtos</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {Array.from({ length: 9 }).map((_, index) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, index) => (
               <ProductSkeleton key={index} />
             ))}
           </div>
@@ -178,7 +178,7 @@ const AllProductsSection = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
