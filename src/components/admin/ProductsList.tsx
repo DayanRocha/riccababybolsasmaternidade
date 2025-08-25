@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Product } from '@/types/product';
+import DatabaseSeeder from './DatabaseSeeder';
 
 interface ProductsListProps {
   onEdit: (product: Product) => void;
@@ -131,8 +132,11 @@ const ProductsList = ({ onEdit, onAdd, refreshTrigger }: ProductsListProps) => {
       </div>
 
       {products.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          Nenhum produto encontrado. Clique em "Novo Produto" para adicionar o primeiro.
+        <div className="space-y-6">
+          <div className="text-center py-8 text-gray-500">
+            Nenhum produto encontrado. Clique em "Novo Produto" para adicionar o primeiro.
+          </div>
+          <DatabaseSeeder />
         </div>
       ) : (
         <>

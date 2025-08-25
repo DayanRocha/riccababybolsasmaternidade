@@ -45,22 +45,49 @@ const CategoryPage = () => {
       
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('category', categorySlug)
-          .eq('active', true);
+        // First get the category ID by slug
+        const { data: categoryData, error: categoryError } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('slug', categorySlug)
+          .single();
 
-        if (error) throw error;
+        if (categoryError) throw categoryError;
         
-        setProducts(data || []);
+        if (!categoryData) {
+          setProducts([]);
+          return;
+        }
+
+        // Then get products by category_id with product_images
+        const { data: productsData, error: productsError } = await supabase
+          .from('products')
+          .select(`
+            *,
+            product_images (
+              id,
+              image_url,
+              image_alt,
+              display_order,
+              is_primary
+            )
+          `)
+          .eq('category_id', categoryData.id)
+          .eq('is_active', true)
+          .order('display_order', { ascending: true });
+
+        if (productsError) throw productsError;
+        
+        setProducts(productsData || []);
         
         // Collect all images for the modal
         const images: string[] = [];
-        data?.forEach(product => {
+        productsData?.forEach(product => {
           if (product.image_url) images.push(product.image_url);
-          if (product.additional_images) {
-            images.push(...product.additional_images);
+          if (product.product_images) {
+            product.product_images.forEach(img => {
+              if (img.image_url) images.push(img.image_url);
+            });
           }
         });
         setAllImages(images);
@@ -154,20 +181,23 @@ const CategoryPage = () => {
                       )}
                       
                       {/* Additional Images */}
-                      {product.additional_images && product.additional_images.length > 0 && (
+                      {product.product_images && product.product_images.length > 0 && (
                         <div className="flex gap-2 mb-4 overflow-x-auto">
-                          {product.additional_images.slice(0, 3).map((imageUrl, index) => (
+                          {product.product_images
+                            .filter(img => !img.is_primary)
+                            .slice(0, 3)
+                            .map((image, index) => (
                             <img
-                              key={index}
-                              src={imageUrl}
-                              alt={`${product.name} - ${index + 2}`}
+                              key={image.id}
+                              src={image.image_url}
+                              alt={image.image_alt || `${product.name} - ${index + 2}`}
                               className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
-                              onClick={() => handleImageClick(imageUrl)}
+                              onClick={() => handleImageClick(image.image_url)}
                             />
                           ))}
-                          {product.additional_images.length > 3 && (
+                          {product.product_images.filter(img => !img.is_primary).length > 3 && (
                             <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center text-sm text-gray-600 flex-shrink-0">
-                              +{product.additional_images.length - 3}
+                              +{product.product_images.filter(img => !img.is_primary).length - 3}
                             </div>
                           )}
                         </div>
