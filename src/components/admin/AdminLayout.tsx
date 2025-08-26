@@ -2,7 +2,7 @@
 import React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { LogOut, Package } from 'lucide-react';
+import { LogOut, Package, ShoppingBag, FolderOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import '@/styles/admin-mobile.css';
 
@@ -10,7 +10,7 @@ interface AdminLayoutProps {
   children: React.ReactNode;
   userEmail?: string;
   currentView?: string;
-  onViewChange?: (view: 'products') => void;
+  onViewChange?: (view: 'products' | 'categories') => void;
 }
 
 const AdminLayout = ({ children, userEmail, currentView, onViewChange }: AdminLayoutProps) => {
@@ -71,6 +71,38 @@ const AdminLayout = ({ children, userEmail, currentView, onViewChange }: AdminLa
             </span>
           </div>
         </div>
+        
+        {/* Navigation Tabs */}
+        {onViewChange && (
+          <div className="border-t border-gray-200">
+            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+              <nav className="flex space-x-8 overflow-x-auto">
+                <button
+                  onClick={() => onViewChange('products')}
+                  className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                    currentView === 'products' || currentView === 'product-form'
+                      ? 'border-pink-500 text-pink-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  <span>Produtos</span>
+                </button>
+                <button
+                  onClick={() => onViewChange('categories')}
+                  className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                    currentView === 'categories' || currentView === 'category-form'
+                      ? 'border-pink-500 text-pink-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <FolderOpen className="h-4 w-4" />
+                  <span>Categorias</span>
+                </button>
+              </nav>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main content */}

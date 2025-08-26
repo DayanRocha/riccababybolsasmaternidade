@@ -6,7 +6,8 @@ import AuthForm from '@/components/admin/AuthForm';
 import AdminLayout from '@/components/admin/AdminLayout';
 import ProductsList from '@/components/admin/ProductsList';
 import ProductFormWithDetection from '@/components/admin/ProductFormWithDetection';
-
+import CategoriesList from '@/components/admin/CategoriesList';
+import CategoryForm from '@/components/admin/CategoryForm';
 import SEO from '@/components/SEO';
 import { useToast } from '@/hooks/use-toast';
 import { Product, Category } from '@/types/product';
@@ -18,7 +19,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAuthorizedEmail, setIsAuthorizedEmail] = useState(false);
-  const [currentView, setCurrentView] = useState<'products' | 'product-form' | 'category-form'>('products');
+  const [currentView, setCurrentView] = useState<'products' | 'product-form' | 'categories' | 'category-form'>('products');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -190,14 +191,24 @@ const Admin = () => {
     setCurrentView('category-form');
   };
 
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setCurrentView('category-form');
+  };
+
+  const handleAddCategory = () => {
+    setEditingCategory(null);
+    setCurrentView('category-form');
+  };
+
   const handleSaveCategory = () => {
-    setCurrentView('products');
+    setCurrentView('categories');
     setEditingCategory(null);
     setRefreshTrigger(prev => prev + 1);
   };
 
   const handleCancelCategoryEdit = () => {
-    setCurrentView('products');
+    setCurrentView('categories');
     setEditingCategory(null);
   };
 
@@ -275,6 +286,14 @@ const Admin = () => {
               product={editingProduct}
               onSave={handleSaveProduct}
               onCancel={handleCancelProductEdit}
+            />
+          )}
+
+          {currentView === 'categories' && (
+            <CategoriesList
+              onEdit={handleEditCategory}
+              onAdd={handleAddCategory}
+              refreshTrigger={refreshTrigger}
             />
           )}
 

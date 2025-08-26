@@ -28,7 +28,8 @@ const CategoriesList = ({ onEdit, onAdd, refreshTrigger }: CategoriesListProps) 
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .order('display_order', { ascending: true });
+        .order('display_order', { ascending: true })
+        .order('name', { ascending: true });
 
       if (error) throw error;
       setCategories(data || []);
@@ -228,8 +229,11 @@ const CategoriesList = ({ onEdit, onAdd, refreshTrigger }: CategoriesListProps) 
                       <Badge variant={category.is_active ? "default" : "secondary"}>
                         {category.is_active ? "Ativa" : "Inativa"}
                       </Badge>
-                      <span className="text-sm text-gray-500">
+                      <Badge variant="outline">
                         Ordem: {category.display_order}
+                      </Badge>
+                      <span className="text-sm text-gray-500">
+                        ID: {category.id.slice(0, 8)}...
                       </span>
                     </div>
                   </div>

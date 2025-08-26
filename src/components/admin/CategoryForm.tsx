@@ -24,8 +24,8 @@ const CategoryForm = ({ category, onSave, onCancel }: CategoryFormProps) => {
     description: '',
     cover_image_url: '',
     cover_image_alt: '',
-    display_order: 0,
     is_active: true,
+    display_order: 0,
   });
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -40,8 +40,8 @@ const CategoryForm = ({ category, onSave, onCancel }: CategoryFormProps) => {
         description: category.description || '',
         cover_image_url: category.cover_image_url || '',
         cover_image_alt: category.cover_image_alt || '',
-        display_order: category.display_order || 0,
         is_active: category.is_active ?? true,
+        display_order: category.display_order ?? 0,
       });
       setImagePreview(category.cover_image_url || '');
     }
@@ -113,16 +113,22 @@ const CategoryForm = ({ category, onSave, onCancel }: CategoryFormProps) => {
 
     try {
       let coverImageUrl = formData.cover_image_url;
+      let coverImageAlt = formData.cover_image_alt;
 
       // Upload new image if selected
       if (imageFile) {
         coverImageUrl = await uploadImage(imageFile);
+        coverImageAlt = formData.cover_image_alt || formData.name;
+      } else if (category && category.cover_image_url && !formData.cover_image_url) {
+        // Preserve existing image if no new image and formData is empty
+        coverImageUrl = category.cover_image_url;
+        coverImageAlt = category.cover_image_alt || formData.name;
       }
 
       const categoryData = {
         ...formData,
         cover_image_url: coverImageUrl,
-        cover_image_alt: formData.cover_image_alt || formData.name
+        cover_image_alt: coverImageAlt
       };
 
       if (category) {
@@ -221,6 +227,7 @@ const CategoryForm = ({ category, onSave, onCancel }: CategoryFormProps) => {
                 type="number"
                 value={formData.display_order}
                 onChange={(e) => setFormData(prev => ({ ...prev, display_order: parseInt(e.target.value) || 0 }))}
+                placeholder="0"
                 min="0"
               />
             </div>

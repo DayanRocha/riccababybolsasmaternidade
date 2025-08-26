@@ -124,10 +124,12 @@ const Collections = () => {
     try {
       setLoading(true);
       
-      // Carregar categorias do banco (sem filtro is_active pois a coluna não existe)
+      // Carregar categorias do banco com todos os campos necessários
       const { data, error } = await supabase
         .from('categories')
-        .select('id, name, slug, cover_image_url, cover_image_alt')
+        .select('id, name, slug, description, cover_image_url, cover_image_alt, is_active, display_order')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
         .order('name', { ascending: true });
 
       if (error) {
@@ -138,37 +140,27 @@ const Collections = () => {
       }
       
       console.log('=== CATEGORIAS DO BANCO ===');
-      console.log('Total de categorias:', data?.length);
+      console.log('Total de categorias ativas:', data?.length);
       data?.forEach((cat: any, index: number) => {
         console.log(`${index + 1}. ${cat.name} - slug: "${cat.slug}" - capa: ${cat.cover_image_url ? 'SIM' : 'NÃO'}`);
       });
       
-      // Se não há categorias no banco, usar fallback
+      // Se não há categorias ativas no banco, usar fallback
       if (!data || data.length === 0) {
-        console.log('Nenhuma categoria no banco, usando fallback');
+        console.log('Nenhuma categoria ativa no banco, usando fallback');
         setCategories(fallbackCategories);
         return;
       }
 
-      // Mesclar dados do banco com fallback
-      const mergedCategories = fallbackCategories.map(fallback => {
-        const dbCategory = data?.find((cat: any) => cat.slug === fallback.slug);
-        if (dbCategory) {
-          console.log(`✅ Categoria ${fallback.slug} encontrada no banco com capa:`, dbCategory.cover_image_url ? 'SIM' : 'NÃO');
-          return {
-            ...fallback,
-            id: dbCategory.id,
-            name: dbCategory.name,
-            cover_image_url: dbCategory.cover_image_url || '',
-            cover_image_alt: dbCategory.cover_image_alt || ''
-          };
-        }
-        console.log(`❌ Categoria ${fallback.slug} não encontrada no banco, usando fallback`);
-        return fallback;
-      });
+      // Usar diretamente os dados do banco, sem mesclagem com fallback
+      const categoriesWithDefaults = data.map(category => ({
+        ...category,
+        cover_image_url: category.cover_image_url || defaultImage,
+        cover_image_alt: category.cover_image_alt || `Imagem da categoria ${category.name}`
+      }));
 
-      console.log('🎯 Categorias finais:', mergedCategories);
-      setCategories(mergedCategories);
+      console.log('🎯 Categorias finais:', categoriesWithDefaults);
+      setCategories(categoriesWithDefaults);
       
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
